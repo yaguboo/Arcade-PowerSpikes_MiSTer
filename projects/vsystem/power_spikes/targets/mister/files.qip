@@ -1,0 +1,141 @@
+# --------------------------------------------------------------------------
+# Video System "Power Spikes" -- source list
+#
+# Add files here, never through the Quartus IDE (it rewrites the .qsf).
+# --------------------------------------------------------------------------
+
+# ---- MiSTer board wrapper -------------------------------------------------
+set_global_assignment -name SYSTEMVERILOG_FILE PowerSpikes.sv
+set_global_assignment -name SDC_FILE PowerSpikes.sdc
+
+# ---- PLL (retargeted to 40.000 MHz; see rtl/pll/pll_0002.v) ---------------
+set_global_assignment -name QIP_FILE rtl/pll.qip
+
+# ---- where ps_rommap.svh is found by `include ----------------------------
+set_global_assignment -name SEARCH_PATH ../../rtl
+# fx68k loads its microcode with a BARE filename -- $readmemb("microrom.mem").
+# Before 2026-09-08 those .mem files sat next to fx68k.sv inside this project
+# and Quartus found them; they still sit next to it, now in third_party/.
+# The search path is declared EXPLICITLY here so that resolution does not
+# depend on where the source happens to live.  An unresolved $readmemb gives
+# an EMPTY microcode ROM and a 68000 that does nothing, which is not a failure
+# mode worth leaving to a tool's file-search order.
+set_global_assignment -name SEARCH_PATH ../../../../../third_party/cpu/fx68k
+# `include "sys/emu_ports.vh"` in the target wrapper is the standard MiSTer
+# idiom and is left exactly as upstream writes it.  With the framework now
+# shared from platforms/mister/, the directory that makes `sys/...` resolve is
+# platforms/mister itself, so it goes on the search path rather than editing
+# the include.  2026-09-08, docs/AUDIT_2026_CROSS_PROJECT.md Tier A.
+#
+# Found by RUNNING Quartus, not by grep: the wrapper .sv files were not in the
+# set of build files the path rewrite covered, and the failure is
+# "can't open Verilog Design File sys/emu_ports.vh" -- loud, but only at
+# elaboration.
+set_global_assignment -name SEARCH_PATH ../../../../../platforms/mister
+
+# ---- 68000 (fx68k, GPLv3, (c) Jorge Cwik) --------------------------------
+# Carries one local additive change inherited from NA-1/NA-2: the dbg_d7
+# port.  docs/LICENSE_USAGE_REPORT.md.
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../../third_party/cpu/fx68k/fx68kAlu.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../../third_party/cpu/fx68k/uaddrPla.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../../third_party/cpu/fx68k/fx68k.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/cpu/ps_m68k.sv
+
+# ---- board ----------------------------------------------------------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/memory/ps_sdram.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/memory/ps_memarb.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/memory/ps_romcache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/video/ps_crtc.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/video/ps_tilemap.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/video/ps_sprite.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/video/ps_video.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/video/ps_dbg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/ps_main.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/ps_top.sv
+
+# ---- Z80 (T80, BSD-3-Clause-style, (c) Daniel Wallner / Sorgelig et al.) ---
+# MiSTer-devel/T80 @ 830fd0315f0af5cdbcb0e703f1cea3ce4e91f538, unmodified.
+# T80_Pack.vhd is a package and must precede the units that use it.
+
+set_global_assignment -name VHDL_FILE ../../../../../third_party/cpu/t80/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE ../../../../../third_party/cpu/t80/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE ../../../../../third_party/cpu/t80/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE ../../../../../third_party/cpu/t80/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE ../../../../../third_party/cpu/t80/T80.vhd
+set_global_assignment -name VHDL_FILE ../../../../../third_party/cpu/t80/T80pa.vhd
+
+# ---- YM2610 (JT12/jt10, GPLv3, (c) Jose Tejada Gomez) ---------------------
+# jotego/jt12 @ 4cf1c5b1426cbed74591ca344f96b769fb027269 plus its jt49
+# submodule @ 47301ed51374d6d41db4db846b7643fecf75e417, unmodified.
+# File set is exactly the one target/quartus/jt10.qip names upstream.
+
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt03_acc.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_acc.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcm.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcm_acc.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcm_cnt.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcm_dbrom.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcm_div.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcm_drvA.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcm_drvB.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcm_gain.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcma_lut.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcmb.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcmb_cnt.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcmb_gain.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_adpcmb_interpol.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt10_cen_burst.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_acc.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_comb.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_csr.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_decim.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_div.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_dout.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_eg.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_eg_cnt.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_eg_comb.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_eg_ctrl.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_eg_final.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_eg_pure.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_eg_step.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_exprom.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_fm_uprate.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_genmix.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_interpol.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_kon.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_lfo.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_logsin.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_mmr.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_mod.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_op.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_pcm.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_pcm_interpol.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_pg.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_pg_comb.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_pg_dt.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_pg_inc.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_pg_sum.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_pm.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_reg.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_reg_ch.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_rst.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_sh.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_sh24.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_sh_rst.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_single_acc.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_sumch.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_timers.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt12_top.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt49.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt49_cen.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt49_div.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt49_eg.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt49_exp.v
+set_global_assignment -name VERILOG_FILE ../../../../../third_party/audio/jt12/jt49_noise.v
+
+# ---- sound board ----------------------------------------------------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/sound/ps_sound.sv
+
+# ---- platform transport ---------------------------------------------------
+set_global_assignment -name SYSTEMVERILOG_FILE ../../integration/ps_download.sv
